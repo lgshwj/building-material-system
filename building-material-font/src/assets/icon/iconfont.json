@@ -1,0 +1,44 @@
+{
+  "id": "1762791",
+  "name": "建筑材料二",
+  "font_family": "iconfont",
+  "css_prefix_text": "icon-lg-",
+  "description": "",
+  "glyphs": [
+    {
+      "icon_id": "9809641",
+      "name": "报价管理",
+      "font_class": "baojiaguanli",
+      "unicode": "e657",
+      "unicode_decimal": 58967
+    },
+    {
+      "icon_id": "588159",
+      "name": "材料厂家",
+      "font_class": "cailiaochangjia",
+      "unicode": "e692",
+      "unicode_decimal": 59026
+    },
+    {
+      "icon_id": "5269216",
+      "name": "导出",
+      "font_class": "daochu",
+      "unicode": "e621",
+      "unicode_decimal": 58913
+    },
+    {
+      "icon_id": "7160380",
+      "name": " 库存",
+      "font_class": "kucun",
+      "unicode": "e602",
+      "unicode_decimal": 58882
+    },
+    {
+      "icon_id": "11019853",
+      "name": "入库",
+      "font_class": "ruku",
+      "unicode": "e60c",
+      "unicode_decimal": 58892
+    }
+  ]
+}

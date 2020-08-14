@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.steel.dao.SiteInformationDao">
+
+    <!--按id查询-->
+    <select id="queryById" resultType="com.steel.entity.SiteInformation">
+        select
+            id, site_name, site_address, site_contact, contact_phone, site_state,
+            start_date, expected_end_date, fact_end_date
+        from tb_site_information
+        where id = #{id}
+    </select>
+
+    <!--按条件分页查询-->
+    <select id="querySiteInformation" resultType="com.steel.entity.SiteInformation">
+        select
+            id, site_name, site_address, site_contact, contact_phone, site_state,
+            start_date, expected_end_date, fact_end_date
+        from tb_site_information
+        where is_delete = 0
+        <if test="siteName != null and siteName != ''">
+            and site_name like CONCAT('%',#{siteName},'%')
+        </if>
+        <if test="siteState != null">
+            and site_state = #{siteState}
+        </if>
+        order by start_date DESC
+        limit #{offset}, #{limit}
+    </select>
+
+    <!--按条件查询符合数据量-->
+    <select id="querySiteCount" resultType="integer">
+        select
+            count(id)
+        from tb_site_information
+        where is_delete = 0
+        <if test="siteName != null and siteName != ''">
+            and site_name like CONCAT('%',#{siteName},'%')
+        </if>
+        <if test="siteState != null">
+            and site_state = #{siteState}
+        </if>
+    </select>
+
+    <!--假删除-->
+    <update id="delSiteInformation">
+        update tb_site_information set is_delete = 1
+        where id in
+        <foreach collection="array" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <!--更新-->
+    <update id="updateSiteInformation">
+        update tb_site_information
+        <set>
+            <if test="siteName != null and siteName != ''">
+                site_name = #{siteName},
+            </if>
+            <if test="siteAddress != null and siteAddress != ''">
+                site_address = #{siteAddress},
+            </if>
+            <if test="siteContact != null and siteContact != ''">
+                site_contact = #{siteContact},
+            </if>
+            <if test="startDate != null and startDate != ''">
+                start_date = #{startDate},
+            </if>
+            <if test="expectedEndDate != null and expectedEndDate != ''">
+                expected_end_date = #{expectedEndDate},
+            </if>
+            <if test="factEndDate != null and factEndDate != ''">
+                fact_end_date = #{factEndDate},
+            </if>
+            <if test="siteState != null">
+                site_state = #{siteState},
+            </if>
+            is_delete = 0
+            where id = #{id}
+        </set>
+    </update>
+    <!--新增-->
+    <insert id="addSiteInformation" keyProperty="id" useGeneratedKeys="true">
+        insert into tb_site_information(
+            site_name, site_address, site_contact, contact_phone,
+            site_state, start_date, expected_end_date, fact_end_date, is_delete)
+        values (#{siteName}, #{siteAddress}, #{siteContact}, #{contactPhone}, 0, #{startDate}, #{expectedEndDate}, #{factEndDate}, 0)
+    </insert>
+
+    <select id="querySiteUsageById" resultType="com.steel.entity.SiteUsage">
+        SELECT
+            tsu.*, tms.material_name, tms.norm, tms.material_quality, tms.material_unit, tms.material_quantity max_add_quantity
+        FROM
+            tb_site_usage tsu
+        left join tb_material_stock tms on tms.id = tsu.material_id
+        where
+            site_id = #{siteId}
+        <if test="materialName != null and materialName != ''">
+            and tms.material_name like CONCAT('%',#{materialName},'%')
+        </if>
+        <if test="startPercent != null and startPercent != 2.25">
+            and tsu.material_use_quantity/tsu.material_total_quantity >= #{startPercent}
+        </if>
+        <if test="endPercent != null and endPercent != 2.25">
+            and tsu.material_use_quantity/tsu.material_total_quantity &lt;= #{endPercent}
+        </if>
+        order by tsu.material_use_quantity/tsu.material_total_quantity DESC
+        limit #{offset}, #{limit}
+    </select>
+
+    <select id="querySiteUsageByIdCount" resultType="integer">
+        SELECT count(tsu.id)
+        FROM
+        tb_site_usage tsu
+        left join tb_material_stock tms on tms.id = tsu.material_id
+        where
+        site_id = #{siteId}
+        <if test="materialName != null and materialName != ''">
+            and tms.material_name like CONCAT('%',#{materialName},'%')
+        </if>
+        <if test="startPercent != null and startPercent != 2.25">
+            and tsu.material_use_quantity/tsu.material_total_quantity >= #{startPercent}
+        </if>
+        <if test="endPercent != null and endPercent != 2.25">
+            and tsu.material_use_quantity/tsu.material_total_quantity &lt;= #{endPercent}
+        </if>
+    </select>
+
+    <insert id="addUsageForSite" keyProperty="id" useGeneratedKeys="true">
+        insert into tb_site_usage(site_id, material_id, material_use_quantity, material_total_quantity)
+        values (#{siteId}, #{materialId}, 0, #{putQuantity})
+    </insert>
+
+    <select id="queryUsage" resultType="integer">
+        select material_id
+        from tb_site_usage
+        where site_id = #{siteId}
+    </select>
+
+    <update id="appendMaterial">
+        UPDATE tb_site_usage
+        SET material_total_quantity = material_total_quantity + #{putQuantity}
+        WHERE
+            id = #{id}
+    </update>
+
+    <update id="updateUseQuantity">
+        update tb_site_usage set material_use_quantity = #{useQuantity}
+        where  id = #{id}
+    </update>
+
+    <select id="queryUseById" resultType="com.steel.entity.SiteUsage">
+        select *
+        from tb_site_usage
+        where id = #{id}
+    </select>
+
+    <select id="queryTotalUseQuantity" resultType="integer">
+        SELECT
+            sum(material_use_quantity)
+        FROM
+            tb_site_usage
+    </select>
+</mapper>

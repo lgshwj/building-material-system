@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.steel.dao.MaterialCategoryDao">
+
+    <resultMap type="com.steel.entity.MaterialCategory" id="MaterialCategoryMap">
+        <result property="id" column="id" jdbcType="INTEGER"/>
+        <result property="materialCategoryName" column="material_category_name" jdbcType="VARCHAR"/>
+        <result property="materialCategoryIntroduce" column="material_category_introduce" jdbcType="VARCHAR"/>
+        <result property="isDelete" column="is_delete" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <!--查询单个-->
+    <select id="queryById" resultMap="MaterialCategoryMap">
+        select
+          id, material_category_name, material_category_introduce, is_delete
+        from building_material_db.tb_material_category
+        where id = #{id}
+    </select>
+
+    <select id="queryByCategoryName" resultMap="MaterialCategoryMap">
+        select
+          id, material_category_name, material_category_introduce, is_delete
+        from building_material_db.tb_material_category
+        where material_category_name = #{materialCategoryName} and is_delete = 0
+    </select>
+
+    <select id="queryByCategoryNameNotSelf" resultMap="MaterialCategoryMap">
+        select
+          id, material_category_name, material_category_introduce, is_delete
+        from building_material_db.tb_material_category
+        where material_category_name = #{materialCategoryName} and is_delete = 0 and id != #{id};
+    </select>
+
+    <!--查询指定行数据-->
+    <select id="queryAllByLimit" resultMap="MaterialCategoryMap">
+        select
+          id, material_category_name, material_category_introduce, is_delete
+        from building_material_db.tb_material_category
+        where is_delete = 0
+        <if test="materialCategoryName != null and materialCategoryName != ''">
+            and material_category_name like CONCAT('%',#{materialCategoryName},'%')
+        </if>
+        limit #{offset}, #{limit}
+    </select>
+
+    <!--查询指定行数据条数-->
+    <select id="queryAllByLimitCount" resultType="integer">
+        select count(id)
+        from building_material_db.tb_material_category
+        where is_delete = 0
+        <if test="materialCategoryName != null and materialCategoryName != ''">
+            and material_category_name like CONCAT('%',#{materialCategoryName},'%')
+        </if>
+    </select>
+
+    <!--通过实体作为筛选条件查询-->
+    <select id="queryAll" resultMap="MaterialCategoryMap">
+        select
+          id, material_category_name, material_category_introduce, is_delete
+        from building_material_db.tb_material_category
+        <where>
+            <if test="id != null">
+                and id = #{id}
+            </if>
+            <if test="materialCategoryName != null and materialCategoryName != ''">
+                and material_category_name = #{materialCategoryName}
+            </if>
+            <if test="materialCategoryIntroduce != null and materialCategoryIntroduce != ''">
+                and material_category_introduce = #{materialCategoryIntroduce}
+            </if>
+            <if test="isDelete != null">
+                and is_delete = #{isDelete}
+            </if>
+        </where>
+    </select>
+
+    <!--新增所有列-->
+    <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+        insert into building_material_db.tb_material_category(material_category_name, material_category_introduce, is_delete)
+        values (#{materialCategoryName}, #{materialCategoryIntroduce}, 0)
+    </insert>
+
+    <!--通过主键修改数据-->
+    <update id="update">
+        update building_material_db.tb_material_category
+        <set>
+            <if test="materialCategoryName != null and materialCategoryName != ''">
+                material_category_name = #{materialCategoryName},
+            </if>
+            <if test="materialCategoryIntroduce != null and materialCategoryIntroduce != ''">
+                material_category_introduce = #{materialCategoryIntroduce},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <!--通过主键删除-->
+    <delete id="deleteById">
+        delete from building_material_db.tb_material_category where id = #{id}
+    </delete>
+
+    <!--假删除-->
+    <update id="deleteMaterialCategory">
+        update building_material_db.tb_material_category set is_delete = 1
+        where id in
+        <foreach collection="array" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <select id="queryCategoryAll" resultType="com.steel.entity.MaterialCategory">
+        select id, material_category_name
+        from tb_material_category
+        where is_delete = 0
+    </select>
+</mapper>

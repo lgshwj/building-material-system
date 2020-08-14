@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.steel.dao.MaterialStockDao">
+
+    <!--查询符合条件材料信息-->
+    <select id="queryMateial" resultType="com.steel.entity.MaterialStock">
+        select
+            tms.id, tms.material_number, tms.material_name, tmc.material_category_name, tms.material_category_id,
+            ts.supplier_name, tf.factory_name, tms.material_unit, tms.material_quantity, tms.material_low,
+            tms.material_high, tms.norm, tms.material_quality
+        from tb_material_stock tms
+        left join tb_material_category tmc on tms.material_category_id = tmc.id
+        left join tb_supplier ts on tms.supplier_id = ts.id
+        left join tb_factory tf on tms.factory_id = tf.id
+        where
+            tms.is_delete = 0
+            <if test="materialNumber != null and materialNumber != ''">
+                and tms.material_number like CONCAT('%',#{materialNumber},'%')
+            </if>
+            <if test="materialName != null and materialName != ''">
+                and tms.material_name like CONCAT('%',#{materialName},'%')
+            </if>
+            <if test="materialCategoryId != null">
+                and tmc.id = #{materialCategoryId}
+            </if>
+            <if test="supplierId != null">
+                and ts.id = #{supplierId}
+            </if>
+            <if test="factoryId != null">
+            and tf.id = #{factoryId}
+            </if>
+        limit #{offset}, #{limit}
+    </select>
+
+    <!--查询符合条件材料数量-->
+    <select id="queryMaterialCount" resultType="integer">
+        select
+            count(tms.id)
+        from tb_material_stock tms
+        left join tb_material_category tmc on tms.material_category_id = tmc.id
+        left join tb_supplier ts on tms.supplier_id = ts.id
+        left join tb_factory tf on tms.factory_id = tf.id
+        where
+        tms.is_delete = 0
+        <if test="materialNumber != null and materialNumber != ''">
+            and tms.material_number like CONCAT('%',#{materialNumber},'%')
+        </if>
+        <if test="materialName != null and materialName != ''">
+            and tms.material_name like CONCAT('%',#{materialName},'%')
+        </if>
+        <if test="materialCategoryId != null">
+            and tmc.id = #{materialCategoryId}
+        </if>
+        <if test="supplierId != null">
+            and ts.id = #{supplierId}
+        </if>
+        <if test="factoryId != null">
+            and tf.id = #{factoryId}
+        </if>
+    </select>
+
+    <!--新增一种材料-->
+    <insert id="insertMaterial" keyProperty="id" useGeneratedKeys="true">
+        insert into
+            building_material_db.tb_material_stock
+            (
+                material_number, material_name, supplier_id, factory_id, material_category_id, material_quantity, material_unit, material_low, material_high, is_delete,
+                norm, material_quality
+            )
+        values (#{materialNumber}, #{materialName}, #{supplierId}, #{factoryId}, #{materialCategoryId}, 0, #{materialUnit}, #{materialLow}, #{materialHigh}, 0,
+                #{norm}, #{materialQuality}
+            )
+    </insert>
+
+    <!--通过名称、规格、材质检测是否为同种材料-->
+    <select id="checkMaterialDup" resultType="integer">
+        select count(id)
+        from tb_material_stock
+        where
+            is_delete = 0 and
+            material_name = #{materialName} and
+            norm = #{norm} and
+            material_quality = #{materialQuality}
+            <if test="id != null">
+                and id != #{id}
+            </if>
+    </select>
+
+    <!--编辑材料-->
+    <update id="updateMaterial">
+        update tb_material_stock
+        <set>
+            <if test="materialName != null and materialName != ''">
+                material_name = #{materialName},
+            </if>
+            <if test="materialUnit != null and materialUnit != ''">
+                material_unit = #{materialUnit},
+            </if>
+            <if test="materialCategoryId != null">
+                material_category_id = #{materialCategoryId},
+            </if>
+            <if test="materialLow != null">
+                material_low = #{materialLow},
+            </if>
+            <if test="materialHigh != null">
+                material_high = #{materialHigh},
+            </if>
+            <if test="norm != null and norm != ''">
+                norm = #{norm},
+            </if>
+            <if test="materialQuality != null and materialQuality != ''">
+                material_quality = #{materialQuality},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <!--假删除-->
+    <update id="delMaterial">
+        update building_material_db.tb_material_stock set is_delete = 1
+        where id in
+        <foreach collection="array" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <!---->
+    <select id="checkMaterial" resultType="integer">
+        select count(id)
+        from tb_material_stock
+        where is_delete = 0
+        <if test="materialName != null and materialName != ''">
+            and material_name = #{materialName}
+        </if>
+        <if test="materialNumber != null and materialNumber != ''">
+            and material_number = #{materialNumber}
+        </if>
+        <if test="norm != null and norm != ''">
+            and norm = #{norm}
+        </if>
+        <if test="materialQuality != null and materialQuality != ''">
+            and material_quality = #{materialQuality}
+        </if>
+    </select>
+
+    <select id="searchIdByNumber" resultType="integer">
+        select id
+        from tb_material_stock
+        where material_number = #{materialNumber}
+    </select>
+
+    <update id="addMaterialQuantity">
+        update tb_material_stock set material_quantity = material_quantity + #{materialQuantity}
+        where id = #{id}
+    </update>
+
+    <select id="searchMaterialAndCategoryInQuotePrice" resultType="com.steel.entity.MaterialStock">
+        SELECT
+            tms.id,
+            tms.material_name,
+            tms.norm,
+            tms.material_quality,
+            tms.material_category_id,
+            tmc.material_category_name
+        FROM
+            tb_quote_price tqp,
+            tb_material_stock tms,
+            tb_material_category tmc
+        WHERE
+            tms.id = tqp.material_id
+        AND tms.material_category_id = tmc.id
+        GROUP BY
+            tqp.material_id
+    </select>
+
+    <select id="queryQuantityById" resultType="integer">
+        select material_quantity
+        from tb_material_stock
+        where id = #{id}
+    </select>
+
+    <select id="queryMaterialInCategoryNotIncludeUsageMaterial" resultType="com.steel.entity.MaterialStock">
+        SELECT
+            tms.id,
+            tms.material_name,
+            tms.norm,
+            tms.material_quality,
+            tms.material_category_id,
+            tmc.material_category_name
+        FROM
+            tb_material_stock tms,
+            tb_material_category tmc
+        WHERE
+            tms.material_category_id = tmc.id
+            <if test="list !=null and list.size()>0">
+                and tms.id not in
+                <foreach collection="list" index="index" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+    </select>
+
+</mapper>

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.steel.dao.EvaluateDao">
+
+    <insert id="insertEvaluate" keyProperty="id" useGeneratedKeys="true">
+        insert into tb_evaluate(
+            supplier_id, supplier_comment, factory_id,
+            factory_comment, supplier_point, factory_point, purchase_plan_id, user_id, evalute_time)
+        values (#{supplierId}, #{supplierComment}, #{factoryId},
+            #{factoryComment}, #{supplierPoint}, #{factoryPoint}, #{purchasePlanId}, #{userId}, now())
+    </insert>
+
+    <select id="queryByPurchasePlanId" resultType="com.steel.entity.Evaluate">
+        select *
+        from tb_evaluate
+        where purchase_plan_id = #{purchasePlanId}
+    </select>
+
+    <select id="getFactoryEvaluate" resultType="com.steel.entity.Evaluate">
+        select e.id, e.factory_id, e.factory_point, e.factory_comment, u.username, e.evalute_time
+        from tb_evaluate e, tb_user u
+        where e.is_delete = 0 and e.factory_id = #{factoryId} and u.id = e.user_id
+        <if test="factoryComment != null and factoryComment != ''">
+            and e.factory_comment like CONCAT('%',#{factoryComment},'%')
+        </if>
+        <if test="factoryPoint != null">
+            and e.factory_point = #{factoryPoint}
+        </if>
+        order by e.evalute_time DESC
+        limit #{offset}, #{limit}
+    </select>
+
+    <select id="getFacotryEvaluateCount" resultType="integer">
+        select count(e.id)
+        from tb_evaluate e, tb_user u
+        where e.is_delete = 0 and e.factory_id = #{factoryId} and u.id = e.user_id
+        <if test="factoryComment != null and factoryComment != ''">
+            and e.factory_comment like CONCAT('%',#{factoryComment},'%')
+        </if>
+        <if test="factoryPoint != null">
+            and e.factory_point = #{factoryPoint}
+        </if>
+    </select>
+
+    <select id="getSupplierEvaluate" resultType="com.steel.entity.Evaluate">
+        select e.id, e.supplier_id, e.supplier_point, e.supplier_comment, u.username, e.evalute_time
+        from tb_evaluate e, tb_user u
+        where e.is_delete = 0 and e.supplier_id = #{supplierId} and u.id = e.user_id
+        <if test="supplierComment != null and supplierComment != ''">
+            and e.supplier_comment like CONCAT('%',#{supplierComment},'%')
+        </if>
+        <if test="supplierPoint != null">
+            and e.supplier_point = #{supplierPoint}
+        </if>
+        order by e.evalute_time DESC
+        limit #{offset}, #{limit}
+    </select>
+
+    <select id="getSupplierEvaluateCount" resultType="integer">
+        select count(e.id)
+        from tb_evaluate e, tb_user u
+        where e.is_delete = 0 and e.supplier_id = #{supplierId} and u.id = e.user_id
+        <if test="supplierComment != null and supplierComment != ''">
+            and e.supplier_comment like CONCAT('%',#{supplierComment},'%')
+        </if>
+        <if test="supplierPoint != null">
+            and e.supplier_point = #{supplierPoint}
+        </if>
+    </select>
+
+</mapper>

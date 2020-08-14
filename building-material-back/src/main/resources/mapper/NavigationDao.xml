@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.steel.dao.NavigationDao">
+
+    <resultMap type="com.steel.entity.Navigation" id="TbNavigationMap">
+        <result property="id" column="id" jdbcType="INTEGER"/>
+        <result property="navigationName" column="navigation_name" jdbcType="VARCHAR"/>
+        <result property="navigationRoute" column="navigation_route" jdbcType="VARCHAR"/>
+        <result property="isDelete" column="is_delete" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <!--查询单个-->
+    <select id="queryById" resultMap="TbNavigationMap">
+        select
+          id, navigation_name, navigation_route, is_delete
+        from building_material_db.tb_navigation
+        where id = #{id}
+    </select>
+
+    <!--查询指定行数据-->
+    <select id="queryAllByLimit" resultMap="TbNavigationMap">
+        select
+          id, navigation_name, navigation_route, is_delete
+        from building_material_db.tb_navigation
+        where
+            is_delete = 0
+            <if test="navigationName != null and navigationName != ''">
+                and navigation_name like CONCAT('%',#{navigationName},'%')
+            </if>
+        limit #{offset}, #{limit}
+    </select>
+
+    <!--查询符合条件的总数据条数-->
+    <select id="queryByLimitCount" resultType="integer">
+        select
+            count(id)
+        from building_material_db.tb_navigation
+        where
+        is_delete = 0
+        <if test="navigationName != null and navigationName != ''">
+            and navigation_name like CONCAT('%',#{navigationName},'%')
+        </if>
+    </select>
+
+    <!--通过实体作为筛选条件查询-->
+    <select id="queryAll" resultMap="TbNavigationMap">
+        select
+          id, navigation_name
+        from building_material_db.tb_navigation
+        where is_delete = 0
+    </select>
+
+    <select id="duplicateForNavigationRoute" resultType="integer">
+        select count(id)
+        from building_material_db.tb_navigation
+        where is_delete = 0 and navigation_route = #{navigationRoute}
+        <if test="id != null">
+            and id != #{id}
+        </if>
+    </select>
+
+    <!--新增所有列-->
+    <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+        insert into building_material_db.tb_navigation(navigation_name, navigation_route, is_delete)
+        values (#{navigationName}, #{navigationRoute},0)
+    </insert>
+
+    <!--通过主键修改数据-->
+    <update id="update">
+        update building_material_db.tb_navigation
+        <set>
+            <if test="navigationName != null and navigationName != ''">
+                navigation_name = #{navigationName},
+            </if>
+            <if test="navigationRoute != null and navigationRoute != ''">
+                navigation_route = #{navigationRoute},
+            </if>
+            <if test="isDelete != null">
+                is_delete = #{isDelete},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <!--通过主键删除-->
+    <delete id="deleteById">
+        delete from building_material_db.tb_navigation where id = #{id}
+    </delete>
+
+    <update id="deleteNavigation">
+        update building_material_db.tb_navigation set is_delete = 1
+        where id in
+        <foreach collection="array" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+
+
+</mapper>

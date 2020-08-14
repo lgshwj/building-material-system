@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.steel.dao.PurchasePlanDao">
+
+    <resultMap type="com.steel.entity.PurchasePlan" id="PurchasePlanMap">
+        <result property="id" column="id" jdbcType="INTEGER"/>
+        <result property="purchaseNumber" column="purchase_number" jdbcType="VARCHAR"/>
+        <result property="applyUserId" column="apply_user_id" jdbcType="INTEGER"/>
+        <result property="applyDate" column="apply_date" jdbcType="TIMESTAMP"/>
+        <result property="state" column="state" jdbcType="INTEGER"/>
+        <result property="approvalDate" column="approval_date" jdbcType="TIMESTAMP"/>
+        <result property="approvalUserId" column="approval_user_id" jdbcType="INTEGER"/>
+        <result property="isDelete" column="is_delete" jdbcType="INTEGER"/>
+        <result property="purchaseNote" column="purchase_note" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <!--查询单个-->
+    <select id="queryById" resultType="com.steel.entity.PurchasePlan">
+        SELECT
+            p.id,
+            tms.material_name,
+            tms.norm,
+            tms.material_quality,
+            p.purchase_quantity,
+            tms.material_unit,
+            s.supplier_name,
+            s.id supplier_id,
+            tqp.material_price,
+            tms.material_number,
+            p.deal_money,
+            tf.factory_name,
+            tf.id factory_id
+        FROM
+            tb_purchase_plan p
+        LEFT JOIN tb_supplier s ON s.id = p.supplier_id
+        LEFT JOIN tb_material_stock tms ON tms.id = p.material_id
+        left join tb_quote_price tqp on tqp.material_id = tms.id and tqp.supplier_id = p.supplier_id
+        left join tb_factory tf on tf.id = tqp.factory_id
+        WHERE
+            p.id = #{id} and tqp.state = 0
+    </select>
+
+    <select id="queryPurchasePlanById" resultType="com.steel.entity.PurchasePlan">
+        select id, material_id, purchase_quantity, state
+        from tb_purchase_plan
+        where id = #{id}
+    </select>
+
+    <select id="queryDataWithLimit" resultType="com.steel.entity.PurchasePlan">
+        SELECT
+            p.id,
+            p.purchase_number,
+            p.apply_date,
+            u1.username apply_username,
+            p.state,
+            p.approval_date,
+            u2.username approval_username,
+            p.approval_note,
+            p.apply_note,
+            tms.material_name,
+            tms.norm,
+            tms.material_quality,
+            p.purchase_quantity,
+            p.supplier_id,
+            tqp.factory_id
+        FROM
+        tb_purchase_plan p
+        LEFT JOIN tb_user u1 ON p.apply_user_id = u1.id
+        LEFT JOIN tb_user u2 ON p.approval_user_id = u2.id
+        LEFT JOIN tb_material_stock tms ON tms.id = p.material_id
+        LEFT JOIN tb_quote_price tqp ON tqp.material_id = tms.id
+        AND tqp.supplier_id = p.supplier_id
+        LEFT JOIN tb_factory tf ON tf.id = tqp.factory_id
+        WHERE
+        p.is_delete = 0 and tqp.state = 0
+        <if test="myId != null and myId != ''">
+            and p.apply_user_id = #{myId}
+        </if>
+        <if test="purchaseNumber != null and purchaseNumber != ''">
+            and p.purchase_number like CONCAT('%',#{purchaseNumber},'%')
+        </if>
+        <if test="state != null">
+            AND p.state = #{state}
+        </if>
+        <if test="startTime != null and startTime != ''">
+            AND p.apply_date &gt;= #{startTime}
+        </if>
+        <if test="endTime != null and endTime != ''">
+            AND p.apply_date &lt;= #{endTime}
+        </if>
+        ORDER BY p.apply_date DESC
+        limit #{offset}, #{limit}
+    </select>
+
+    <select id="queryDataCountWithLimit" resultType="integer">
+        SELECT
+            count(p.id)
+        FROM
+        tb_purchase_plan p
+        LEFT JOIN tb_user u1 ON p.apply_user_id = u1.id
+        LEFT JOIN tb_user u2 ON p.approval_user_id = u2.id
+        LEFT JOIN tb_material_stock tms ON tms.id = p.material_id
+        LEFT JOIN tb_quote_price tqp ON tqp.material_id = tms.id
+        AND tqp.supplier_id = p.supplier_id
+        LEFT JOIN tb_factory tf ON tf.id = tqp.factory_id
+        WHERE
+        p.is_delete = 0 and tqp.state = 0
+        <if test="myId != null and myId != ''">
+            and p.apply_user_id = #{myId}
+        </if>
+        <if test="purchaseNumber != null and purchaseNumber != ''">
+            and p.purchase_number like CONCAT('%',#{purchaseNumber},'%')
+        </if>
+        <if test="state != null">
+            AND p.state = #{state}
+        </if>
+        <if test="startTime != null and startTime != ''">
+            AND p.apply_date &gt;= #{startTime}
+        </if>
+        <if test="endTime != null and endTime != ''">
+            AND p.apply_date &lt;= #{endTime}
+        </if>
+    </select>
+
+    <update id="approvalPurchasePlan">
+        update tb_purchase_plan
+        set
+            state = #{state},
+            <if test="approvalNote != null and approvalNote != ''">
+                approval_note = #{approvalNote},
+            </if>
+            <if test="dealMoney != null">
+                deal_money = #{dealMoney},
+            </if>
+            approval_user_id = #{approvalUserId},
+            approval_date = now()
+        where id = #{id}
+    </update>
+
+    <!--假删除-->
+    <update id="delPurchasePlan">
+        update building_material_db.tb_purchase_plan set is_delete = 1
+        where id in
+        <foreach collection="array" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <insert id="addPurchasePlan">
+        insert into tb_purchase_plan(purchase_number, apply_user_id, apply_date, state, material_id, purchase_quantity, is_delete, apply_note, supplier_id)
+        values (#{purchaseNumber}, #{applyUserId}, now(), 0, #{materialId}, #{purchaseQuantity}, 0, #{applyNote}, #{supplierId})
+    </insert>
+
+    <select id="getApprovalPurchase" resultType="com.steel.entity.MaterialStock">
+        SELECT
+            tpp.id,
+            tms.material_name,
+            tms.norm,
+            tms.material_quality,
+            tpp.purchase_quantity material_quantity,
+            tms.material_unit,
+            tpp.purchase_number material_number
+        FROM
+            tb_purchase_plan tpp
+        LEFT JOIN tb_material_stock tms ON tms.id = tpp.material_id
+        WHERE
+            state = 3
+    </select>
+
+    <update id="updateStateOver">
+        update tb_purchase_plan set
+            state = 4,
+            done_date = date_format(now(),'%Y-%m-%d'),
+            done_year = date_format(now(),'%Y'),
+            done_month = date_format(now(),'%m')
+        where id = #{id}
+    </update>
+
+    <select id="statisticTotalPurchase" resultType="com.steel.entity.PurchasePlan">
+        SELECT
+            tpp.supplier_id,
+            ts.supplier_name,
+            tpp.purchase_quantity,
+            tpp.done_date,
+            tpp.done_year,
+            tpp.done_month,
+	        tpp.deal_money
+        FROM
+            tb_purchase_plan tpp,
+            tb_supplier ts
+        WHERE
+            tpp.state = 4
+        AND tpp.supplier_id = ts.id
+        ORDER BY tpp.done_date ASC
+    </select>
+
+    <select id="statisticByUseSelect" resultType="com.steel.entity.PurchasePlan">
+        SELECT
+        tpp.id,
+        tpp.done_date,
+        tpp.purchase_quantity,
+        tpp.material_id,
+        tms.material_name,
+        tmc.material_category_name,
+        tpp.supplier_id,
+        tpp.done_year,
+        tpp.done_month,
+        tmc.id material_category_id,
+        ts.supplier_name
+        FROM
+        tb_purchase_plan tpp,
+        tb_material_stock tms,
+        tb_material_category tmc,
+        tb_supplier ts
+        WHERE
+        tpp.done_date >= #{startDate}
+        AND tpp.done_date &lt; #{endDate}
+        AND tpp.state = 4
+        AND tms.id = tpp.material_id
+        AND tms.material_category_id = tmc.id
+        AND ts.id = tpp.supplier_id
+        ORDER BY tpp.done_date ASC
+    </select>
+
+    <update id="updatePurchasePlanToHavaBuy">
+        update tb_purchase_plan set state = 3
+        where id = #{id}
+    </update>
+</mapper>

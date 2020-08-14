@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.steel.dao.FactoryDao">
+
+    <resultMap type="com.steel.entity.Factory" id="FactoryMap">
+        <result property="id" column="id" jdbcType="INTEGER"/>
+        <result property="factoryNumber" column="factory_number" jdbcType="VARCHAR"/>
+        <result property="factoryName" column="factory_name" jdbcType="VARCHAR"/>
+        <result property="factoryContacts" column="factory_contacts" jdbcType="VARCHAR"/>
+        <result property="factoryPhone" column="factory_phone" jdbcType="VARCHAR"/>
+        <result property="factoryAddress" column="factory_address" jdbcType="VARCHAR"/>
+        <result property="factoryEvaluate" column="factory_evaluate" jdbcType="VARCHAR"/>
+        <result property="factoryNote" column="factory_note" jdbcType="VARCHAR"/>
+        <result property="isDelete" column="is_delete" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <!--查询单个-->
+    <select id="queryById" resultMap="FactoryMap">
+        select
+          id, factory_number, factory_name, factory_contacts, factory_phone, factory_address, factory_evaluate, factory_note, is_delete
+        from building_material_db.tb_factory
+        where id = #{id}
+    </select>
+
+    <!--查询指定行数据-->
+    <select id="queryAllByLimit" resultMap="FactoryMap">
+        select
+          id, factory_number, factory_name, factory_contacts, factory_phone, factory_address, factory_evaluate, factory_note, is_delete
+        from building_material_db.tb_factory
+        limit #{offset}, #{limit}
+    </select>
+
+    <select id="queryFactoryWihtLimit" resultMap="FactoryMap">
+        select
+          id, factory_number, factory_name, factory_contacts, factory_phone, factory_address, factory_evaluate, factory_note, is_delete
+        from building_material_db.tb_factory
+        where is_delete = 0
+        <if test="factory.factoryNumber != null and factory.factoryNumber != ''">
+            and factory_number like CONCAT('%',#{factory.factoryNumber},'%')
+        </if>
+        <if test="factory.factoryName != null and factory.factoryName != ''">
+            and factory_name like CONCAT('%',#{factory.factoryName},'%')
+        </if>
+        <if test="factory.factoryAddress != null and factory.factoryAddress != ''">
+            and factory_address like CONCAT('%',#{factory.factoryAddress},'%')
+        </if>
+        <if test="factory.factoryEvaluate != null and factory.factoryEvaluate != ''">
+            and factory_evaluate like CONCAT('%',#{factory.factoryEvaluate},'%')
+        </if>
+        limit #{offset}, #{limit}
+    </select>
+
+    <select id="queryFactoryCountWihtLimit" resultType="integer">
+        select
+            count(id)
+        from building_material_db.tb_factory
+        where is_delete = 0
+        <if test="factoryNumber != null and factoryNumber != ''">
+            and factory_number like CONCAT('%',#{factoryNumber},'%')
+        </if>
+        <if test="factoryName != null and factoryName != ''">
+            and factory_name like CONCAT('%',#{factoryName},'%')
+        </if>
+        <if test="factoryAddress != null and factoryAddress != ''">
+            and factory_address like CONCAT('%',#{factoryAddress},'%')
+        </if>
+        <if test="factoryEvaluate != null and factoryEvaluate != ''">
+            and factory_evaluate like CONCAT('%',#{factoryEvaluate},'%')
+        </if>
+    </select>
+
+    <!--通过实体作为筛选条件查询-->
+    <select id="queryAll" resultMap="FactoryMap">
+        select
+          id, factory_number, factory_name, factory_contacts, factory_phone, factory_address, factory_evaluate, factory_note, is_delete
+        from building_material_db.tb_factory
+        <where>
+            <if test="id != null">
+                and id = #{id}
+            </if>
+            <if test="factoryNumber != null and factoryNumber != ''">
+                and factory_number = #{factoryNumber}
+            </if>
+            <if test="factoryName != null and factoryName != ''">
+                and factory_name = #{factoryName}
+            </if>
+            <if test="factoryContacts != null and factoryContacts != ''">
+                and factory_contacts = #{factoryContacts}
+            </if>
+            <if test="factoryPhone != null and factoryPhone != ''">
+                and factory_phone = #{factoryPhone}
+            </if>
+            <if test="factoryAddress != null and factoryAddress != ''">
+                and factory_address = #{factoryAddress}
+            </if>
+            <if test="factoryEvaluate != null and factoryEvaluate != ''">
+                and factory_evaluate = #{factoryEvaluate}
+            </if>
+            <if test="factoryNote != null and factoryNote != ''">
+                and factory_note = #{factoryNote}
+            </if>
+            <if test="isDelete != null">
+                and is_delete = #{isDelete}
+            </if>
+        </where>
+    </select>
+
+    <!--新增所有列-->
+    <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+        insert into building_material_db.tb_factory(factory_number, factory_name, factory_contacts, factory_phone, factory_address, factory_evaluate, factory_note, is_delete)
+        values (#{factoryNumber}, #{factoryName}, #{factoryContacts}, #{factoryPhone}, #{factoryAddress}, #{factoryEvaluate}, #{factoryNote},0)
+    </insert>
+
+    <!--通过主键修改数据-->
+    <update id="update">
+        update building_material_db.tb_factory
+        <set>
+            <if test="factoryName != null and factoryName != ''">
+                factory_name = #{factoryName},
+            </if>
+            <if test="factoryContacts != null and factoryContacts != ''">
+                factory_contacts = #{factoryContacts},
+            </if>
+            <if test="factoryPhone != null and factoryPhone != ''">
+                factory_phone = #{factoryPhone},
+            </if>
+            <if test="factoryAddress != null and factoryAddress != ''">
+                factory_address = #{factoryAddress},
+            </if>
+            <if test="factoryEvaluate != null and factoryEvaluate != ''">
+                factory_evaluate = #{factoryEvaluate},
+            </if>
+            <if test="factoryNote != null and factoryNote != ''">
+                factory_note = #{factoryNote},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <!--通过主键删除-->
+    <delete id="deleteById">
+        delete from building_material_db.tb_factory where id = #{id}
+    </delete>
+
+    <!--假删除-->
+    <update id="deleteFactory">
+        update building_material_db.tb_factory set is_delete = 1
+        where id in
+        <foreach collection="array" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <select id="queryFactoryAll" resultType="com.steel.entity.Factory">
+        select id, factory_name, factory_number
+        from tb_factory
+        where is_delete = 0
+    </select>
+</mapper>

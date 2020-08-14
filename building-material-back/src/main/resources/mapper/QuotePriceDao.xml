@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.steel.dao.QuotePriceDao">
+
+    <resultMap type="com.steel.entity.QuotePrice" id="QuotePriceMap">
+        <result property="id" column="id" jdbcType="INTEGER"/>
+        <result property="supplierId" column="supplier_id" jdbcType="INTEGER"/>
+        <result property="supplierNumber" column="supplier_number" jdbcType="VARCHAR"/>
+        <result property="factoryName" column="factory_name" jdbcType="VARCHAR"/>
+        <result property="materialName" column="material_name" jdbcType="VARCHAR"/>
+        <result property="materialQuantity" column="material_quantity" jdbcType="INTEGER"/>
+        <result property="materialUnit" column="material_unit" jdbcType="VARCHAR"/>
+        <result property="materialPrice" column="material_price" jdbcType="NUMERIC"/>
+        <result property="releaseDate" column="release_date" jdbcType="VARCHAR"/>
+        <result property="closingDate" column="closing_date" jdbcType="VARCHAR"/>
+        <result property="isDelete" column="is_delete" jdbcType="INTEGER"/>
+    </resultMap>
+
+
+    <select id="queryQuotePrice" resultType="com.steel.entity.QuotePrice">
+        select
+            tqp.id, tms.material_name, tms.norm, tms.material_quality, tms.material_unit,
+            ts.supplier_name, tf.factory_name, tqp.material_quantity, tqp.state, tqp.release_date, tqp.manufacture_date,
+            tqp.quality_guarantee_period, tqp.origin_place, tqp.material_price
+        from tb_quote_price tqp
+        left join tb_factory tf on tf.id = tqp.factory_id
+        left join tb_supplier ts on ts.id = tqp.supplier_id
+        left join tb_material_stock tms on tms.id = tqp.material_id
+        where
+            tqp.is_delete = 0
+            <if test="norm != null and norm != ''">
+                and tms.norm like CONCAT('%',#{norm},'%')
+            </if>
+            <if test="norm != null and norm != ''">
+                and tms.material_quality like CONCAT('%',#{materialQuality},'%')
+            </if>
+            <if test="supplierId != null">
+                and tqp.supplier_id = #{supplierId}
+            </if>
+            <if test="factoryName != null and factoryName != ''">
+                and tf.factory_name like CONCAT('%',#{factoryName},'%')
+            </if>
+            <if test="materialName != null and materialName != ''">
+                and tms.material_name like CONCAT('%',#{materialName},'%')
+            </if>
+            <if test="releaseStartTime != null and releaseStartTime != ''">
+                AND tqp.release_date &gt;= #{releaseStartTime}
+            </if>
+            <if test="releaseEndTime != null and releaseEndTime != ''">
+                AND tqp.release_date &lt;= #{releaseEndTime}
+            </if>
+            <if test="state != null">
+                and tqp.state = #{state}
+            </if>
+            order by tqp.release_date DESC
+            limit #{offset}, #{limit}
+    </select>
+
+    <select id="queryQuotePriceCount" resultType="integer">
+        select
+            count(tqp.id)
+        from tb_quote_price tqp
+        left join tb_factory tf on tf.id = tqp.factory_id
+        left join tb_supplier ts on ts.id = tqp.supplier_id
+        left join tb_material_stock tms on tms.id = tqp.material_id
+        where
+        tqp.is_delete = 0
+        <if test="norm != null and norm != ''">
+            and tms.norm like CONCAT('%',#{norm},'%')
+        </if>
+        <if test="norm != null and norm != ''">
+            and tms.material_quality like CONCAT('%',#{materialQuality},'%')
+        </if>
+        <if test="supplierId != null">
+            and tqp.supplier_id = #{supplierId}
+        </if>
+        <if test="factoryName != null and factoryName != ''">
+            and tf.factory_name like CONCAT('%',#{factoryName},'%')
+        </if>
+        <if test="materialName != null and materialName != ''">
+            and tms.material_name like CONCAT('%',#{materialName},'%')
+        </if>
+        <if test="releaseStartTime != null and releaseStartTime != ''">
+            AND tqp.release_date &gt;= #{releaseStartTime}
+        </if>
+        <if test="releaseEndTime != null and releaseEndTime != ''">
+            AND tqp.release_date &lt;= #{releaseEndTime}
+        </if>
+        <if test="state != null">
+           and tqp.state = #{state}
+        </if>
+    </select>
+
+
+    <!--批量插入-->
+    <insert id="insertBatch" keyProperty="id" useGeneratedKeys="true">
+        insert into
+            building_material_db.tb_quote_price (
+                material_id, supplier_id, material_quantity,material_price,
+                factory_name, origin_place, manufacture_date, quality_guarantee_period,
+                release_date, state, is_delete, factory_id
+            )
+        values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.materialId},#{item.supplierId},#{item.materialQuantity},#{item.materialPrice},
+            #{item.factoryName},#{item.originPlace}, #{item.manufactureDate}, #{item.qualityGuaranteePeriod},
+            #{item.releaseDate}, 0, 0, #{item.factoryId})
+        </foreach>
+    </insert>
+
+    <!--通过主键修改数据-->
+    <update id="update">
+        update building_material_db.tb_quote_price
+        <set>
+            <if test="supplierId != null">
+                supplier_id = #{supplierId},
+            </if>
+            <if test="supplierNumber != null and supplierNumber != ''">
+                supplier_number = #{supplierNumber},
+            </if>
+            <if test="factoryId != null">
+                factory_id = #{factoryId},
+            </if>
+            <if test="materialName != null and materialName != ''">
+                material_name = #{materialName},
+            </if>
+            <if test="materialQuantity != null">
+                material_quantity = #{materialQuantity},
+            </if>
+            <if test="materialUnit != null and materialUnit != ''">
+                material_unit = #{materialUnit},
+            </if>
+            <if test="materialPrice != null">
+                material_price = #{materialPrice},
+            </if>
+            <if test="releaseDate != null">
+                release_date = #{releaseDate},
+            </if>
+            <if test="closingDate != null">
+                closing_date = #{closingDate},
+            </if>
+            <if test="isDelete != null">
+                is_delete = #{isDelete},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <!--通过主键删除-->
+    <update id="deleteById">
+        update building_material_db.tb_quote_price set is_delete = 1
+        where id in
+        <foreach collection="array" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <select id="searchSupplierByMaterialId" resultType="com.steel.entity.Supplier">
+        select ts.id , ts.supplier_name, tqp.material_quantity supplier_number
+        from tb_quote_price tqp
+        left join tb_supplier ts on ts.id = tqp.supplier_id
+        where tqp.material_id = #{materialId} and tqp.state = 0
+    </select>
+
+    <update id="updateQuotePrice">
+        UPDATE tb_quote_price
+        SET state = 1
+        WHERE
+            material_id = #{materialId}
+        AND supplier_id = #{supplierId}
+    </update>
+
+    <select id="searchMinPurchase" resultType="integer">
+        select material_quantity
+        from tb_quote_price
+        where is_delete = 0 and state = 0 and material_id = #{materialId}
+        AND supplier_id = #{supplierId}
+    </select>
+
+    <select id="analysisQuotePrice" resultType="com.steel.entity.QuotePrice">
+        SELECT
+        tqp.supplier_id,
+        ts.supplier_name,
+        DATE_FORMAT(tqp.release_date,'%Y-%m') release_date,
+        tqp.release_date now_date,
+        tqp.material_price,
+        tms.material_name,
+        tms.norm,
+        tms.material_quality
+        FROM
+        tb_quote_price tqp,
+        tb_supplier ts,
+        tb_material_stock tms
+        WHERE
+        tms.id = tqp.material_id
+        AND tqp.supplier_id = ts.id
+        AND tqp.material_id = #{materialId}
+        AND tqp.release_date &gt; #{startDate}
+        AND tqp.release_date &lt; #{endDate}
+        and tqp.is_delete = 0
+        ORDER BY tqp.release_date ASC
+    </select>
+
+</mapper>

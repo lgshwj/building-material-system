@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.steel.dao.AccountDao">
+
+    <resultMap type="com.steel.entity.User" id="UserMap">
+        <result property="id" column="id" jdbcType="INTEGER"/>
+        <result property="username" column="username" jdbcType="VARCHAR"/>
+        <result property="nickname" column="nickname" jdbcType="VARCHAR"/>
+        <result property="password" column="password" jdbcType="VARCHAR"/>
+        <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+        <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+        <result property="isDelete" column="is_delete" jdbcType="INTEGER"></result>
+    </resultMap>
+
+    <!--查询单个-->
+    <!--<select id="queryById" resultMap="UserMap">
+        select
+          id, username, password, create_time, update_time
+        from building_material_db.tb_user
+        where id = #{id}
+    </select>-->
+
+    <!--查询指定行数据-->
+    <select id="queryByLimitAccountName" resultMap="UserMap">
+        select
+          id, username, nickname, create_time, update_time
+        from building_material_db.tb_user
+        where is_delete = 0
+        <if test="username != null and username != ''">
+            and username like CONCAT('%',#{username},'%')
+        </if>
+        limit #{offset}, #{limit}
+    </select>
+
+    <select id="queryByLimitAccountNameCount" resultType="integer">
+        select
+            count(id)
+        from building_material_db.tb_user
+        where is_delete = 0
+        <if test="username != null and username != ''">
+            and username like CONCAT('%',#{username},'%')
+        </if>
+    </select>
+
+    <!--假删除-->
+    <update id="deleteAccount">
+        update building_material_db.tb_user set is_delete = 1
+        where id in
+        <foreach collection="array" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <select id="queryRightByUserId" resultType="com.steel.entity.Right" parameterType="integer">
+        select *
+        from building_material_db.tb_right
+        where user_id = #{userId}
+    </select>
+
+    <delete id="deleteAccountRight">
+        delete from building_material_db.tb_right where user_id = #{userId}
+    </delete>
+
+    <insert id="insertAccountRight" keyProperty="id" useGeneratedKeys="true">
+        insert into building_material_db.tb_right(user_id, navigation_id)
+        values
+        <foreach collection="navId" index="index" item="item" separator="," >
+            (#{userId} ,  #{item} )
+        </foreach>
+    </insert>
+
+    <select id="queryPermission" resultType="integer">
+        select count(*)
+        from building_material_db.tb_right , building_material_db.tb_navigation
+        where
+            tb_right.user_id = #{userId} and
+            tb_right.navigation_id = tb_navigation.id and
+            tb_navigation.navigation_route = #{navigationRoute}
+    </select>
+
+</mapper>

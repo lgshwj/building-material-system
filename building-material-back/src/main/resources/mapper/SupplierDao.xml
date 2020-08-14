@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.steel.dao.SupplierDao">
+
+    <resultMap type="com.steel.entity.Supplier" id="SupplierMap">
+        <result property="id" column="id" jdbcType="INTEGER"/>
+        <result property="supplierNumber" column="supplier_number" jdbcType="VARCHAR"/>
+        <result property="supplierName" column="supplier_name" jdbcType="VARCHAR"/>
+        <result property="supplierContacts" column="supplier_contacts" jdbcType="VARCHAR"/>
+        <result property="supplierPhone" column="supplier_phone" jdbcType="VARCHAR"/>
+        <result property="supplierAddress" column="supplier_address" jdbcType="VARCHAR"/>
+        <result property="supplierEvaluate" column="supplier_evaluate" jdbcType="VARCHAR"/>
+        <result property="supplierNote" column="supplier_note" jdbcType="VARCHAR"/>
+        <result property="isDelete" column="is_delete" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <!--查询单个-->
+    <select id="queryById" resultMap="SupplierMap">
+        select
+          id, supplier_number, supplier_name, supplier_contacts, supplier_phone, supplier_address, supplier_evaluate, supplier_note, is_delete
+        from building_material_db.tb_supplier
+        where id = #{id}
+    </select>
+
+    <!--查询数据：编号、名称、地址、评价模糊搜索-->
+    <select id="querySupplierByLimit" resultMap="SupplierMap">
+         select
+          id, supplier_number, supplier_name, supplier_contacts, supplier_phone, supplier_address, supplier_evaluate, supplier_note, is_delete
+        from building_material_db.tb_supplier
+        where is_delete = 0
+        <if test="supplier.supplierNumber != null and supplier.supplierNumber != ''">
+            and supplier_number like CONCAT('%',#{supplier.supplierNumber},'%')
+        </if>
+        <if test="supplier.supplierName != null and supplier.supplierName != ''">
+            and supplier_name like CONCAT('%',#{supplier.supplierName},'%')
+        </if>
+        <if test="supplier.supplierAddress != null and supplier.supplierAddress != ''">
+            and supplier_address like CONCAT('%',#{supplier.supplierAddress},'%')
+        </if>
+        <if test="supplier.supplierEvaluate != null and supplier.supplierEvaluate != ''">
+            and supplier_evaluate like CONCAT('%',#{supplier.supplierEvaluate},'%')
+        </if>
+        limit #{offset}, #{limit}
+    </select>
+    <!--查询数据条数：编号、名称、地址、评价模糊搜索-->
+    <select id="querySupplierByLimitCount" resultType="integer">
+        select
+            count(id)
+        from building_material_db.tb_supplier
+        where is_delete = 0
+        <if test="supplierNumber != null and supplierNumber != ''">
+            and supplier_number like CONCAT('%',#{supplierNumber},'%')
+        </if>
+        <if test="supplierName != null and supplierName != ''">
+            and supplier_name like CONCAT('%',#{supplierName},'%')
+        </if>
+        <if test="supplierAddress != null and supplierAddress != ''">
+            and supplier_address like CONCAT('%',#{supplierAddress},'%')
+        </if>
+        <if test="supplierEvaluate != null and supplierEvaluate != ''">
+            and supplier_evaluate like CONCAT('%',#{supplierEvaluate},'%')
+        </if>
+    </select>
+
+    <!--查询指定行数据-->
+    <select id="queryAllByLimit" resultMap="SupplierMap">
+        select
+          id, supplier_number, supplier_name, supplier_contacts, supplier_phone, supplier_address, supplier_evaluate, supplier_note, is_delete
+        from building_material_db.tb_supplier
+        limit #{offset}, #{limit}
+    </select>
+
+    <!--通过实体作为筛选条件查询-->
+    <select id="queryAll" resultMap="SupplierMap">
+        select
+          id, supplier_number, supplier_name, supplier_contacts, supplier_phone, supplier_address, supplier_evaluate, supplier_note, is_delete
+        from building_material_db.tb_supplier
+        <where>
+            <if test="id != null">
+                and id = #{id}
+            </if>
+            <if test="supplierNumber != null and supplierNumber != ''">
+                and supplier_number = #{supplierNumber}
+            </if>
+            <if test="supplierName != null and supplierName != ''">
+                and supplier_name = #{supplierName}
+            </if>
+            <if test="supplierContacts != null and supplierContacts != ''">
+                and supplier_contacts = #{supplierContacts}
+            </if>
+            <if test="supplierPhone != null and supplierPhone != ''">
+                and supplier_phone = #{supplierPhone}
+            </if>
+            <if test="supplierAddress != null and supplierAddress != ''">
+                and supplier_address = #{supplierAddress}
+            </if>
+            <if test="supplierEvaluate != null and supplierEvaluate != ''">
+                and supplier_evaluate = #{supplierEvaluate}
+            </if>
+            <if test="supplierNote != null and supplierNote != ''">
+                and supplier_note = #{supplierNote}
+            </if>
+            <if test="isDelete != null">
+                and is_delete = #{isDelete}
+            </if>
+        </where>
+    </select>
+
+    <!--新增所有列-->
+    <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+        insert into building_material_db.tb_supplier(supplier_number, supplier_name, supplier_contacts, supplier_phone, supplier_address, supplier_evaluate, supplier_note, is_delete)
+        values (#{supplierNumber}, #{supplierName}, #{supplierContacts}, #{supplierPhone}, #{supplierAddress}, #{supplierEvaluate}, #{supplierNote}, 0)
+    </insert>
+
+    <!--通过主键修改数据-->
+    <update id="update">
+        update building_material_db.tb_supplier
+        <set>
+            <if test="supplierName != null and supplierName != ''">
+                supplier_name = #{supplierName},
+            </if>
+            <if test="supplierContacts != null and supplierContacts != ''">
+                supplier_contacts = #{supplierContacts},
+            </if>
+            <if test="supplierPhone != null and supplierPhone != ''">
+                supplier_phone = #{supplierPhone},
+            </if>
+            <if test="supplierAddress != null and supplierAddress != ''">
+                supplier_address = #{supplierAddress},
+            </if>
+            <if test="supplierEvaluate != null and supplierEvaluate != ''">
+                supplier_evaluate = #{supplierEvaluate},
+            </if>
+            <if test="supplierNote != null and supplierNote != ''">
+                supplier_note = #{supplierNote},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <!--通过主键删除-->
+    <delete id="deleteById">
+        delete from building_material_db.tb_supplier where id = #{id}
+    </delete>
+
+    <!--假删除-->
+    <update id="deleteSupplier">
+        update building_material_db.tb_supplier set is_delete = 1
+        where id in
+        <foreach collection="array" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <select id="querySupplierAll" resultType="com.steel.entity.Supplier">
+        select id , supplier_name, supplier_number
+        from tb_supplier
+        where is_delete = 0
+    </select>
+
+
+</mapper>
